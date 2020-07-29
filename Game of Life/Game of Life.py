@@ -78,7 +78,7 @@ class GameOfLife(QWidget):
         self.init_pauseStart_button()
         self.matrix_to_board()
         self.board_to_matrix()
-        self.set_random_grid()
+        # self.set_random_grid()  #uncomment if you want to generate a random filled grid
         self.horizontal_box_layout()
         self.vertical_box_layout()
 
