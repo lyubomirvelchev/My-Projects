@@ -6,18 +6,15 @@ class Game:
         self.board = []
         self.row = []
         self.size = n
-        self.full_list = []
-        for _i in range(0, n * n):  # list ot 0 do (n*n - 1)
-            self.full_list.append(_i) # pzp: Use list comprehansion - self.full_list = [x for x in range(0, n * n)]
-        self.check_list = []
-        for _i in range(0, n * n):  # full_list stava prazen i si pravim copy kato retardi
-            self.check_list.append(_i) # pzp: Make copy of list.
+        self.full_list = [x for x in range(0, n * n)]  # pzp: Use list comprehansion - self.full_list = [x for x in range(0, n * n)]
+        self.check_list = [x for x in range(0, n * n)]
         self.zero = (0, 0)
         self.counter = 1
         self.height = n
         self.commands = []
         self.turns = 0
-        self.the_mighty_algorithm_used =False
+        self.the_mighty_algorithm_used = False
+        self.does_print = True
 
     # Създава почти подреден борд с цел проверка на някои функции
     def create_ordered_board(self):
@@ -43,28 +40,28 @@ class Game:
                 self.full_list.pop(self.full_list.index(a))
             self.board.append(self.row)
             self.row = []
-        #1 [x for x in range(0, self.size * self.size)] ; random.shuffle(); n X n -> [[0:n], [n+1: 2*n], [2n+1, 3*n]]
-        #2 list comprehansion can involve IF statement last element -> 0
-        #3* [1 .. n**2 - 1, 0] -> method shuffle board. all boards can be solved!
 
     def create_beautiful_board(self):  # oformqme hubav bord i go printim vseki pyt
-        # for elem in range(0, self.size):
-        hor_sep = " -----"*self.size
+        hor_sep = " -----" * self.size
         print(hor_sep, end="")  # продължаваме на същият ред
-            # print(" -----"*self.size, end="")
         print("")  # nov red
         for row in range(0, self.size):
             print("|", end="")
             for column in range(0, self.size):
-                if self.board[row][column] < 10:
+                if self.board[row][column] == 0:
+                    print("     |", end="")
+                elif self.board[row][column] < 10:
                     print("  " + str(self.board[row][column]) + "  |", end="")  # krasivo oformlenie za chislata pod 10
-                elif self.board[row][column] > 99:
+                elif self.board[row][column] > 99 and self.board[row][column] < 1000:
                     print(" " + str(self.board[row][column]) + " |", end="")  # krasivo oformlenie za chislata nad 100
+                elif self.board[row][column] > 999 and self.board[row][column] < 10000:
+                    print("" + str(self.board[row][column]) + " |", end="")
+                elif self.board[row][column] > 9999 and self.board[row][column] < 100000:
+                    print("" + str(self.board[row][column]) + "|", end="")
                 else:
                     print(" " + str(self.board[row][column]) + "  |", end="")  # krasivo oformlenie za dvucifrenite
             print("")
             print(hor_sep)
-        # time.sleep(0.5)
 
     def swap(self, a, b, c, d):  # swap beibe
         buff = self.board[a][b]  # buff beibe
@@ -77,7 +74,8 @@ class Game:
         else:
             self.swap(self.zero[0], self.zero[1], self.zero[0], self.zero[1] - 1)
             self.zero = (self.zero[0], self.zero[1] - 1)  # promenqme koordinatite na nulata
-            self.create_beautiful_board()  # printim novite promeni на борда
+            if self.does_print:
+                self.create_beautiful_board()  # printim novite promeni на борда
             self.commands.append("left")
             self.turns += 1
 
@@ -87,7 +85,8 @@ class Game:
         else:
             self.swap(self.zero[0], self.zero[1], self.zero[0], self.zero[1] + 1)
             self.zero = (self.zero[0], self.zero[1] + 1)
-            self.create_beautiful_board()
+            if self.does_print:
+                self.create_beautiful_board()
             self.commands.append("right")
             self.turns += 1
 
@@ -97,7 +96,8 @@ class Game:
         else:
             self.swap(self.zero[0], self.zero[1], self.zero[0] - 1, self.zero[1])
             self.zero = (self.zero[0] - 1, self.zero[1])
-            self.create_beautiful_board()
+            if self.does_print:
+                self.create_beautiful_board()
             self.commands.append("up")
             self.turns += 1
 
@@ -107,7 +107,8 @@ class Game:
         else:
             self.swap(self.zero[0], self.zero[1], self.zero[0] + 1, self.zero[1])
             self.zero = (self.zero[0] + 1, self.zero[1])
-            self.create_beautiful_board()
+            if self.does_print:
+                self.create_beautiful_board()
             self.commands.append("down")
             self.turns += 1
 
@@ -122,12 +123,18 @@ class Game:
         elif inp == "down":
             self.down_arrow()
         elif inp == "0":
+            while True:
+                does_print_inp = input("Do you want to print every step  (Y/N)?: ")
+                if does_print_inp == "N" or does_print_inp == "n":
+                    self.does_print = False
+                    break
+                elif does_print_inp == "Y" or does_print_inp == "y":
+                    break
             self.the_mighty_algorithm()
         else:
             print("Invalid direction")  # нема такава посока
 
     def multiple_turns_from_array(self, arr):  # Взима лист с команди 'right', 'left', 'up' or 'down' и ги изпълнява
-        # self.create_ordered_board()
         self.create_board()
         self.create_beautiful_board()
         for elem in arr:  # minavame prez vsichki komandi
@@ -148,13 +155,12 @@ class Game:
 
     def check_board(self):
         for element in self.check_list:  # проверяваме всеки елемент дали си е на мястото
-            if self.search_number(element) != self.find_correct_place_better(element):
+            if self.search_number(element) != self.find_correct_place(element):
                 return False
         return True
 
     def player_game(self):
         self.create_board()
-        # self.create_ordered_board() # v sluchai che iskame podredena duska ctr+? tuk i na gorniq red
         self.create_beautiful_board()
         while not self.check_board() and not self.the_mighty_algorithm_used:  # Играем догато не е подреден борда
             self.single_turn()
@@ -165,26 +171,18 @@ class Game:
     def search_number(self, number):  # копи пейст от нета, щот не успях сам да го измисля
         for i, x in enumerate(self.board):
             if number in x:
-                return (i, x.index(number))  # nz kak bachka :'(
+                return (i, x.index(number))
 
-    def find_correct_x(self, number):
-        return int(number / self.size)
+    def find_correct_x(self, number):  # long story short - bla bla
+        return int(number / self.size) if number % self.size != 0 else int(number / self.size - 1)
 
     def find_correct_y(self, number):
         return self.size - 1 if number % self.size == 0 else number % self.size - 1
 
-    def find_correct_place(self, number):  # namirame pravilnoto mqsto na number
-        if number == 0:  # ako e nula to pravilnto mqsto e poslednoto
-            return (self.size - 1, self.size - 1)
-        return (self.find_correct_x(number), self.find_correct_y(number))  #
-
-    def find_correct_x_better(self, number):  # long story short - bla bla
-        return int(number / self.size) if number % self.size != 0 else int(number / self.size - 1)
-
-    def find_correct_place_better(self, number):
+    def find_correct_place(self, number):
         if number == 0:
             return (self.size - 1, self.size - 1)
-        return (self.find_correct_x_better(number), self.find_correct_y(number))
+        return (self.find_correct_x(number), self.find_correct_y(number))
 
     def move_zero(self, target, number):
         while not self.zero == target:  # mestim nulata do target kato zaobikalqme daden number za da nqma razmestvane
@@ -212,6 +210,7 @@ class Game:
                     self.left_arrow()  # mestim zero nalqvo
 
     def if_zero_below_target(self, target, number):
+
         for _i in range(0, self.size - 1 - self.zero[1]):
             if self.zero[0] == number[0] and self.zero[1] == number[1] - 1:
                 self.go_around_number(number)
@@ -220,8 +219,13 @@ class Game:
                 self.right_arrow()  # nadqsno dokato dokarame nulata v posledna kolona
         for _j in range(0, self.zero[0] - target[0]):
             if self.zero[0] == number[0] + 1 and self.zero[1] == number[1]:
-                self.go_around_number(number)
-                return
+                if number[0] == target[0] and number[1] == target[1] + 1:
+                    self.left_arrow()
+                    self.upper_arrow()
+                    return
+                else:
+                    self.go_around_number(number)
+                    return
             else:
                 self.upper_arrow()  # nagore dokato dokarame nulata do reda na target
         for _k in range(0, self.size - 1 - target[1]):
@@ -393,23 +397,9 @@ class Game:
         self.counter += 1  # sledvashtoto chislo
         while self.search_number(self.counter - 1) != self.find_correct_place(self.counter - 1 + self.size):
             d = self.search_number(self.counter - 1)  # dokarvame predposledniqt element pod posledniqt element
-            print("")
-            print("")
-            print("")
-            print("SMQTAYYY")
-            print("")
-            print("")
-            print("")
             if d[0] == self.find_correct_place(self.counter - 1 + self.size)[0] and d[1] != self.size - 1:
                 self.move_zero((d[0], d[1] + 1), d)
                 self.left_arrow()
-                print("")
-                print("")
-                print("")
-                print("hui1")
-                print("")
-                print("")
-                print("")
             elif d[0] == self.find_correct_place(self.counter - 1 + self.size)[0] and d[1] == self.size - 1:
                 self.left_arrow()
                 self.down_arrow()
@@ -429,13 +419,6 @@ class Game:
                 self.right_arrow()
                 self.upper_arrow()
                 self.upper_arrow()  # chasten sluchai ako elementa e na dolniqt red posledna kolona
-                print("")
-                print("")
-                print("")
-                print("hui2")
-                print("")
-                print("")
-                print("")
             elif d[0] == self.find_correct_place(self.counter - 1 + self.size)[0] + 1 and d[1] == self.size - 1:
                 self.down_arrow()
                 self.left_arrow()
@@ -447,51 +430,23 @@ class Game:
                 self.right_arrow()
                 self.upper_arrow()
                 self.upper_arrow()  # drug chasten sluchai
-                print("")
-                print("")
-                print("")
-                print("")
-                print("hui3")
-                print("")
-                print("")
-                print("")
             else:  # vsichki ostanali sluchai
                 while d[1] != self.size - 2:  # tr dokarame elementa do predposledna kolona
                     if d[1] == self.size - 1:  # ako e v posledna kolona
                         self.move_zero((d[0], d[1] - 1), d)
                         self.right_arrow()
-                        print("")
-                        print("")
-                        print("")
-                        print("hui4")
-                        print("")
-                        print("")
-                        print("")
                     else:  # ako ne e
                         self.move_zero((d[0], d[1] + 1), d)
                         self.left_arrow()
-                        print("")
-                        print("")
-                        print("")
-                        print("hui5")
-                        print("")
-                        print("")
-                        print("")
                     d = self.search_number(self.counter - 1)
                 while d[0] != self.find_correct_place(self.counter - 1 + self.size)[0]:  #
                     self.move_zero((d[0] - 1, d[1]), d)
                     self.down_arrow()
                     d = self.search_number(self.counter - 1)
-                    print("")
-                    print("")
-                    print("")
-                    print("hui6")
-                    print("")
-                    print("")
-                    print("")
-        self.move_zero((self.find_correct_place_better(self.counter)), (self.find_correct_place(self.counter - 1 +self.size)))
+
+        self.move_zero((self.find_correct_place(self.counter)),
+                       (self.find_correct_place(self.counter - 1 + self.size)))
         """"Veche ca podredeni taka:  [1,2,......,self.size,neshto si],[neshto si,.......,self.size - 1,0]"""
-        # self.upper_arrow()
         self.left_arrow()
         self.down_arrow()
         self.counter += 1
@@ -543,17 +498,16 @@ class Game:
 
     # its magic
 
-    def check_last_two_rows(self): #ponqkoga ne gi podrejda pravilno zatowa proverka i ako sa nepravilno podredeni
+    def check_last_two_rows(self):  # ponqkoga ne gi podrejda pravilno zatowa proverka i ako sa nepravilno podredeni
         # gi odrejda pak dokato ne se podredqt kato horata
         check_numbers = []
         for _number in range(0, self.size - 2):
             check_numbers.append(self.counter - 1)
-            check_numbers.append(self.counter - 1+ self.size)
+            check_numbers.append(self.counter - 1 + self.size)
             self.counter -= 1
-        print(check_numbers)
         for element in check_numbers:
             if self.search_number(element) != self.find_correct_place(element):
-                self.counter = self.size*(self.size - 2) + 1
+                self.counter = self.size * (self.size - 2) + 1
                 for _anothernumber in range(0, self.size - 2):
                     self.place_last_two_rows()
                 self.check_last_two_rows()
@@ -579,26 +533,26 @@ class Game:
                 self.solvable_or_unsolvable()
 
     def solvable_or_unsolvable(self):
+        self.create_beautiful_board()
         if self.search_number(self.counter + self.size) == self.find_correct_place(self.counter + self.size):
-            print("The puzzle is solved in {} turn(s)".format(self.turns))  # ako posledniqt element e na mqstoto sinachi e solved
+            print("The puzzle is solved in {} turn(s)".format(
+                self.turns))  # ako posledniqt element e na mqstoto sinachi e solved
         else:
             print("The puzzle is unsolvable. This useless riddle took us {} turn(s)".format(self.turns))
 
     def the_mighty_algorithm(self):  # the name speaks for itself
         for _number in range(0, self.size - 2):  # podrejdame pyrvite n - 2 reda
             self.place_single_row()
-            print("bash hui")
             self.height -= 1  # visochinata pada s edno za da ne hodi nulata tam kydeto ne i e rabota
         for _anothernumber in range(0, self.size - 2):
             self.place_last_two_rows()  # podrejdame poslednite dva reda bez 2 x 2 kvadrata
         self.check_last_two_rows()
-        self.counter = self.size*self.size - self.size - 1
+        self.counter = self.size * self.size - self.size - 1
         self.move_last_three_elements()
-        print("All used commands:")
-        print(self.commands)
+        # print("All used commands:")
+        # print(self.commands)
         self.the_mighty_algorithm_used = True
 
 
-
-c = Game()
+c = Game(25)
 c.player_game()
